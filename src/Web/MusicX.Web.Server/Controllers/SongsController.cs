@@ -13,7 +13,6 @@
     using MusicX.Common.Models;
     using MusicX.Data.Models;
     using MusicX.Services.Data.Songs;
-    using MusicX.Services.DataProviders;
     using MusicX.Web.Server.Infrastructure;
     using MusicX.Web.Shared;
     using MusicX.Web.Shared.Songs;
@@ -44,30 +43,6 @@
             var artists = splitter.SplitArtistName(request.Artists).ToList();
             var songId = await this.songsService.CreateSongAsync(request.SongName, artists, SourcesNames.User, this.User.GetId());
             var song = new SongArtistsAndTitle(artists, request.SongName);
-
-            // Find video if available
-            var youTubeDataProvider = new YouTubeDataProvider(); // TODO: Move to constructor
-            var videoId = youTubeDataProvider.SearchVideo(string.Join(" ", song.Artists), song.Title);
-            if (videoId != null)
-            {
-                await this.songMetadataService.AddMetadataInfoAsync(
-                    songId,
-                    new SongAttributes(SongMetadataType.YouTubeVideoId, videoId),
-                    SourcesNames.YouTube,
-                    null);
-            }
-
-            // Find lyrics if available
-            var lyricsPluginDataProvider = new LyricsPluginDataProvider(); // TODO: Move to constructor
-            var lyrics = lyricsPluginDataProvider.GetLyrics(song.Artist, song.Title);
-            if (!string.IsNullOrWhiteSpace(lyrics))
-            {
-                await this.songMetadataService.AddMetadataInfoAsync(
-                    songId,
-                    new SongAttributes(SongMetadataType.Lyrics, lyrics),
-                    SourcesNames.LyricsPlugin,
-                    null);
-            }
 
             await this.songsService.UpdateSongsSystemDataAsync(songId);
 
